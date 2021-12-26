@@ -7,25 +7,16 @@ import agh.ics.oop.Interfaces.IPositionChangeObserver;
 import java.util.*;
 
 public class EvolutionMap implements IPositionChangeObserver {
-    private int width;
-    private int height;
-    private boolean hasWall;
-    private HashSet<Vector2d> grass = new HashSet<>();
-    private Map<Vector2d, TreeSet<Animal>> animals = new HashMap<>();
+    private final int width;
+    private final int height;
+    private final int jungleWidth;
+    private final int jungleHeight;
+    private final Vector2d jungleLowerLeft;
+    private final Vector2d jungleUpperRight;
+    private final boolean hasWall;
+    private HashMap<Vector2d, Grass> grass = new HashMap<>();
+    private Map<Vector2d, HashSet<Animal>> animals = new HashMap<>();
     private HashSet<Animal> animalList = new HashSet<>();
-    private static Comparator<Animal> animalComparator = new Comparator<>() {
-        @Override
-        public int compare(Animal o1, Animal o2) {
-            if (o1.getEnergy() <= o2.getEnergy())
-            {
-                return 1;
-            }
-            else
-            {
-                return -1;
-            }
-        }
-    };
 
     public HashSet<Animal> getAnimalList() {
         return animalList;
@@ -35,6 +26,10 @@ public class EvolutionMap implements IPositionChangeObserver {
     {
         this.width = EntryData.width;
         this.height = EntryData.height;
+        this.jungleWidth = EntryData.jungleWidth;
+        this.jungleHeight = EntryData.jungleHeight;
+        this.jungleLowerLeft = new Vector2d((this.width/2)-(this.jungleWidth/2),(this.height/2)-(this.jungleHeight/2));
+        this.jungleUpperRight = new Vector2d((this.width/2)+(this.jungleWidth/2),(this.height/2)+(this.jungleHeight/2));
         this.hasWall = hasWall;
 
         Random random = new Random();
@@ -89,13 +84,18 @@ public class EvolutionMap implements IPositionChangeObserver {
     {
         // funkcja rusza każdym zwierzęciem i usuwa przy okazji martwe zwierzęta
         ArrayList<Animal> toRemove = new ArrayList<>();
-        for (Animal animal : animalList) {
-            if (animal.getEnergy() <= 0) {
+        for (Animal animal : animalList)
+        {
+            if (animal.getEnergy() <= 0)
+            {
                 toRemove.add(animal);
-            } else {
+            }
+            else
+            {
                 animal.setEnergy(animal.getEnergy() - EntryData.moveEnergy);
                 animal.move();
             }
+            animal.addAge();
         }
         for (Animal animal : toRemove)
         {
@@ -103,39 +103,29 @@ public class EvolutionMap implements IPositionChangeObserver {
             animalList.remove(animal);
         }
 
-        for (Animal animal : animalList) {
-            animal.addAge();
-        }
     }
 
     public void breedAnimals()
     {
-        for (TreeSet<Animal> tset : animals.values())
+        for (HashSet<Animal> tset : animals.values())
         {
-            ArrayList<Animal> toBreed = new ArrayList<>();
-            int i = 0;
-            for (Animal animal : tset)
+            if (tset.size() < 2)
             {
-                if (i == 2)
-                {
-                    break;
-                }
-                toBreed.add(animal);
-                i++;
+                return;
             }
-            if (toBreed.size() < 2)
-            {
-                break;
-            }
-            Animal parent1 = toBreed.get(0);
-            Animal parent2 = toBreed.get(1);
+            Animal parent1 = Collections.max(tset, Comparator.comparingInt(Animal::getEnergy));
+            tset.remove(parent1);
+            Animal parent2 = Collections.max(tset, Comparator.comparingInt(Animal::getEnergy));
+            tset.remove(parent2);
+
             if (parent1.getEnergy() < EntryData.breedEnergy() || parent2.getEnergy() < EntryData.breedEnergy())
             {
+                tset.add(parent1);
+                tset.add(parent2);
                 break;
             }
+
             new Animal(parent1, parent2);
-            tset.remove(parent1);
-            tset.remove(parent2);
             parent1.addChild();
             parent2.addChild();
             tset.add(parent1);
@@ -145,46 +135,87 @@ public class EvolutionMap implements IPositionChangeObserver {
 
     public void eatGrass()
     {
-        for (Vector2d grassPos : grass)
+        int sum = 0;
+        for (HashSet<Animal> tset : animals.values())
+        {
+            sum += tset.size();
+        }
+        System.out.println(sum + " " + this.numberOfAnimals());
+
+        for (Vector2d grassPos : grass.keySet())
         {
             ArrayList<Animal> tmp = new ArrayList<>();
-            int currEnergy = 0;
             if (animals.containsKey(grassPos))
             {
-                for (Animal animal : animals.get(grassPos)) //znajdź zwierzęta z taką samą największą ilością energii
+                if(animals.get(grassPos).size() < 1)
                 {
-                    if (currEnergy <= animal.getEnergy())
+                    return;
+                }
+
+                Animal animal1 = Collections.max(animals.get(grassPos), Comparator.comparingInt(Animal::getEnergy));
+                tmp.add(animal1);
+
+                for (Animal animal : animals.get(grassPos))
+                {
+                    if (animal.getEnergy() == animal1.getEnergy())
                     {
-                        currEnergy = animal.getEnergy();
                         tmp.add(animal);
                     }
-                    else
-                    {
-                        break;
-                    }
                 }
+
 
                 int energyForAll = EntryData.plantEnergy / tmp.size(); //równy podział energii
 
                 for (Animal animal : tmp)   //rozdanie energii i aktualizacja listy zwierząt
                 {
                     animal.setEnergy(animal.getEnergy()+energyForAll);
-                    animals.get(grassPos).remove(animal);
-                    animals.get(grassPos).add(animal);
                 }
             }
         }
     }
 
     public void addGrass(){
+        Random random = new Random();
+        ArrayList<Vector2d> jungle = new ArrayList<>();
+        ArrayList<Vector2d> nonJungle = new ArrayList<>();
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                Vector2d tmp = new Vector2d(i,j);
+                if (grass.containsKey(tmp) || (animals.containsKey(tmp) && animals.get(tmp).size() > 0))
+                {
+                    continue;
+                }
 
+                if (tmp.follows(jungleLowerLeft) && tmp.precedes(jungleUpperRight))
+                {
+                    jungle.add(tmp);
+                }
+                else
+                {
+                    nonJungle.add(tmp);
+                }
+            }
+        }
+        if (jungle.size() > 0)
+        {
+            int i = random.nextInt(jungle.size());
+            grass.put(jungle.get(i), new Grass());
+        }
+
+        if (nonJungle.size() > 0)
+        {
+            int i = random.nextInt(nonJungle.size());
+            grass.put(nonJungle.get(i), new Grass());
+        }
     }
 
     public boolean canMoveTo(Vector2d position) {
         return !hasWall || position.precedes(new Vector2d(width - 1, height - 1)) && position.follows(new Vector2d(0, 0));
     }
 
-    public boolean place(Animal animal)
+    public void place(Animal animal)
     {
         if (animals.containsKey(animal.getPosition()))
         {
@@ -192,26 +223,38 @@ public class EvolutionMap implements IPositionChangeObserver {
         }
         else
         {
-            TreeSet<Animal> tmp = new TreeSet<>(animalComparator);
+            HashSet<Animal> tmp = new HashSet<>();
             tmp.add(animal);
             animals.put(animal.getPosition(),tmp);
         }
         animalList.add(animal);
         animal.addObserver(this);
-        return true;
     }
 
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition, IMapElement element) {
-        animals.get(oldPosition).remove((Animal)element);
+
+        if (!(animals.get(oldPosition).remove((Animal)element)))
+        {
+            System.out.println(animals.get(oldPosition));
+            System.out.println(element);
+        }
         if (animals.containsKey(newPosition))
         {
             animals.get(newPosition).add((Animal) element);
         }
         else
         {
-            TreeSet<Animal> tmp = new TreeSet<>(animalComparator);
+            HashSet<Animal> tmp = new HashSet<>();
             tmp.add((Animal) element);
             animals.put(newPosition,tmp);
         }
+    }
+
+    public int numberOfAnimals() {
+        return animalList.size();
+    }
+
+    public void createMagicAnimals() {
+
     }
 }

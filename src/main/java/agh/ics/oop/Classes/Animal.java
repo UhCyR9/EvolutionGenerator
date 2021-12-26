@@ -6,9 +6,11 @@ import agh.ics.oop.Interfaces.IMapElement;
 import agh.ics.oop.Interfaces.IPositionChangeObserver;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Random;
 
 public class Animal implements IMapElement {
+    private static int number = 0;
     private Vector2d position;
     private MapDirection direction;
     private final EvolutionMap map;
@@ -17,6 +19,7 @@ public class Animal implements IMapElement {
     private int age=0;
     private int childrenNumber=0;
     private ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
+    private int toHashCode;
 
 
     public Animal(Vector2d position, EvolutionMap map) //początkowe zwierzęta
@@ -25,11 +28,13 @@ public class Animal implements IMapElement {
         this.map = map;
         this.genes = new Genes();
         this.energy = EntryData.startEnergy;
+        toHashCode= number;
+        number += 1;
 
         // losowy kierunek
         Random random = new Random();
         this.direction = MapDirection.values()[random.nextInt(MapDirection.values().length)];
-        map.place(this);
+        this.map.place(this);
     }
 
     public Animal(Animal parent1, Animal parent2) //dziecko
@@ -37,7 +42,8 @@ public class Animal implements IMapElement {
         this.position = parent1.getPosition();
         this.map = parent1.getMap();
         this.genes = new Genes(parent1,parent2);
-        this.observers = parent1.getObservers();
+        this.toHashCode= number;
+        number += 1;
 
         //energia dziecka
         int par1Energy = (int) Math.round(parent1.getEnergy()*(0.25));
@@ -49,7 +55,7 @@ public class Animal implements IMapElement {
         //losowy kierunek
         Random random = new Random();
         this.direction = MapDirection.values()[random.nextInt(MapDirection.values().length)];
-        map.place(this);
+        this.map.place(this);
     }
 
 
@@ -137,10 +143,7 @@ public class Animal implements IMapElement {
     }
 
     @Override
-    public String toString() {
-        return "Animal{" +
-                "position=" + position +
-                ", direction=" + direction +
-                '}';
+    public int hashCode() {
+        return Objects.hash(toHashCode);
     }
 }
