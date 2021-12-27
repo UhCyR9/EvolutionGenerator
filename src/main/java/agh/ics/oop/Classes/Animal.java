@@ -4,22 +4,27 @@ import agh.ics.oop.EnumClasses.MapDirection;
 import agh.ics.oop.EvolutionGenerator.EntryData;
 import agh.ics.oop.Interfaces.IMapElement;
 import agh.ics.oop.Interfaces.IPositionChangeObserver;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Random;
 
 public class Animal implements IMapElement {
-    private static int number = 0;
+    private static int numberOfAnimals = 0;
     private Vector2d position;
     private MapDirection direction;
     private final EvolutionMap map;
     private final Genes genes;
     private int energy;
     private int age=0;
-    private int childrenNumber=0;
+    private ArrayList<Animal> children= new ArrayList<>();
     private ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
     private int toHashCode;
+    private ImageView imageView;
 
 
     public Animal(Vector2d position, EvolutionMap map) //początkowe zwierzęta
@@ -28,13 +33,51 @@ public class Animal implements IMapElement {
         this.map = map;
         this.genes = new Genes();
         this.energy = EntryData.startEnergy;
-        toHashCode= number;
-        number += 1;
+        toHashCode= numberOfAnimals;
+        numberOfAnimals += 1;
 
         // losowy kierunek
         Random random = new Random();
         this.direction = MapDirection.values()[random.nextInt(MapDirection.values().length)];
         this.map.place(this);
+
+        Image image = null;
+        try {
+            image = new Image(new FileInputStream("src/main/resources/animal.jpg"));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        imageView = new ImageView(image);
+        imageView.setFitWidth(20);
+        imageView.setFitHeight(20);
+    }
+
+
+    public Animal(Animal toCopy, Vector2d position) //kopiowanie z pełną energią
+    {
+        this.position = position;
+        this.map = toCopy.getMap();
+        this.genes = toCopy.getGenes2();
+        this.energy = EntryData.startEnergy;
+        toHashCode= numberOfAnimals;
+        numberOfAnimals += 1;
+
+        // losowy kierunek
+        Random random = new Random();
+        this.direction = MapDirection.values()[random.nextInt(MapDirection.values().length)];
+        this.map.place(this);
+
+        Image image = null;
+        try {
+            image = new Image(new FileInputStream("src/main/resources/animal.jpg"));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        imageView = new ImageView(image);
+        imageView.setFitWidth(20);
+        imageView.setFitHeight(20);
     }
 
     public Animal(Animal parent1, Animal parent2) //dziecko
@@ -42,8 +85,8 @@ public class Animal implements IMapElement {
         this.position = parent1.getPosition();
         this.map = parent1.getMap();
         this.genes = new Genes(parent1,parent2);
-        this.toHashCode= number;
-        number += 1;
+        this.toHashCode= numberOfAnimals;
+        numberOfAnimals += 1;
 
         //energia dziecka
         int par1Energy = (int) Math.round(parent1.getEnergy()*(0.25));
@@ -56,6 +99,17 @@ public class Animal implements IMapElement {
         Random random = new Random();
         this.direction = MapDirection.values()[random.nextInt(MapDirection.values().length)];
         this.map.place(this);
+
+        Image image = null;
+        try {
+            image = new Image(new FileInputStream("src/main/resources/animal.jpg"));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        imageView = new ImageView(image);
+        imageView.setFitWidth(20);
+        imageView.setFitHeight(20);
     }
 
 
@@ -105,6 +159,7 @@ public class Animal implements IMapElement {
         return position;
     }
 
+
     public EvolutionMap getMap() {
         return map;
     }
@@ -115,6 +170,11 @@ public class Animal implements IMapElement {
 
     public ArrayList<Integer> getGenes() {
         return genes.getGenes();
+    }
+
+    public Genes getGenes2()
+    {
+        return genes;
     }
 
     public int getEnergy() {
@@ -129,12 +189,20 @@ public class Animal implements IMapElement {
         this.energy = energy;
     }
 
+    public int getAge() {
+        return age;
+    }
+
+    public ArrayList<Animal> getChildren() {
+        return children;
+    }
+
     public void addAge() {
         this.age += 1;
     }
 
-    public void addChild() {
-        this.childrenNumber += 1;
+    public void addChild(Animal animal) {
+        this.children.add(animal);
     }
 
     public void addObserver(IPositionChangeObserver observer)
@@ -145,5 +213,9 @@ public class Animal implements IMapElement {
     @Override
     public int hashCode() {
         return Objects.hash(toHashCode);
+    }
+
+    public ImageView getImageView() {
+        return imageView;
     }
 }

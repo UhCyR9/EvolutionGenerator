@@ -15,8 +15,11 @@ public class EvolutionMap implements IPositionChangeObserver {
     private final Vector2d jungleUpperRight;
     private final boolean hasWall;
     private HashMap<Vector2d, Grass> grass = new HashMap<>();
-    private Map<Vector2d, HashSet<Animal>> animals = new HashMap<>();
+    private HashMap<Vector2d, HashSet<Animal>> animals = new HashMap<>();
     private HashSet<Animal> animalList = new HashSet<>();
+    private HashMap<Genes, Integer> genotype = new HashMap<>();
+    private int averageLifeTime=0;
+
 
     public HashSet<Animal> getAnimalList() {
         return animalList;
@@ -80,7 +83,7 @@ public class EvolutionMap implements IPositionChangeObserver {
         }
     }
 
-    public void moveAnimals()
+    public synchronized void moveAnimals()
     {
         // funkcja rusza każdym zwierzęciem i usuwa przy okazji martwe zwierzęta
         ArrayList<Animal> toRemove = new ArrayList<>();
@@ -89,6 +92,7 @@ public class EvolutionMap implements IPositionChangeObserver {
             if (animal.getEnergy() <= 0)
             {
                 toRemove.add(animal);
+                averageLifeTime += animal.getAge()/2;
             }
             else
             {
@@ -101,11 +105,12 @@ public class EvolutionMap implements IPositionChangeObserver {
         {
             animals.get(animal.getPosition()).remove(animal);
             animalList.remove(animal);
+            genotype.replace(animal.getGenes2(),genotype.get(animal.getGenes2())-1);
         }
 
     }
 
-    public void breedAnimals()
+    public synchronized void breedAnimals()
     {
         for (HashSet<Animal> tset : animals.values())
         {
@@ -117,7 +122,6 @@ public class EvolutionMap implements IPositionChangeObserver {
             tset.remove(parent1);
             Animal parent2 = Collections.max(tset, Comparator.comparingInt(Animal::getEnergy));
             tset.remove(parent2);
-
             if (parent1.getEnergy() < EntryData.breedEnergy() || parent2.getEnergy() < EntryData.breedEnergy())
             {
                 tset.add(parent1);
@@ -125,29 +129,23 @@ public class EvolutionMap implements IPositionChangeObserver {
                 break;
             }
 
-            new Animal(parent1, parent2);
-            parent1.addChild();
-            parent2.addChild();
+            Animal child = new Animal(parent1, parent2);
+            parent1.addChild(child);
+            parent2.addChild(child);
             tset.add(parent1);
             tset.add(parent2);
         }
     }
 
-    public void eatGrass()
+    public synchronized void eatGrass()
     {
-        int sum = 0;
-        for (HashSet<Animal> tset : animals.values())
-        {
-            sum += tset.size();
-        }
-        System.out.println(sum + " " + this.numberOfAnimals());
-
+        ArrayList<Vector2d> toRemove = new ArrayList<>();
         for (Vector2d grassPos : grass.keySet())
         {
             ArrayList<Animal> tmp = new ArrayList<>();
             if (animals.containsKey(grassPos))
             {
-                if(animals.get(grassPos).size() < 1)
+                if(animals.get(grassPos).size() == 0)
                 {
                     return;
                 }
@@ -157,24 +155,28 @@ public class EvolutionMap implements IPositionChangeObserver {
 
                 for (Animal animal : animals.get(grassPos))
                 {
-                    if (animal.getEnergy() == animal1.getEnergy())
+                    if (animal.getEnergy() == animal1.getEnergy() && !(animal.equals(animal1)))
                     {
                         tmp.add(animal);
                     }
                 }
 
+                int energyForAll = EntryData.plantEnergy / tmp.size(); // równy podział energii
 
-                int energyForAll = EntryData.plantEnergy / tmp.size(); //równy podział energii
-
-                for (Animal animal : tmp)   //rozdanie energii i aktualizacja listy zwierząt
+                for (Animal animal : tmp)   // rozdanie energii
                 {
                     animal.setEnergy(animal.getEnergy()+energyForAll);
                 }
+                toRemove.add(grassPos);
             }
+        }
+        for (Vector2d pos : toRemove)
+        {
+            grass.remove(pos);
         }
     }
 
-    public void addGrass(){
+    public synchronized void addGrass(){
         Random random = new Random();
         ArrayList<Vector2d> jungle = new ArrayList<>();
         ArrayList<Vector2d> nonJungle = new ArrayList<>();
@@ -215,7 +217,7 @@ public class EvolutionMap implements IPositionChangeObserver {
         return !hasWall || position.precedes(new Vector2d(width - 1, height - 1)) && position.follows(new Vector2d(0, 0));
     }
 
-    public void place(Animal animal)
+    public synchronized void place(Animal animal)
     {
         if (animals.containsKey(animal.getPosition()))
         {
@@ -229,15 +231,21 @@ public class EvolutionMap implements IPositionChangeObserver {
         }
         animalList.add(animal);
         animal.addObserver(this);
+
+        if (genotype.containsKey(animal.getGenes2()))
+        {
+            genotype.replace(animal.getGenes2(),genotype.get(animal.getGenes2())+1);
+        }
+        else
+        {
+            genotype.put(animal.getGenes2(), 1);
+        }
     }
 
     public void positionChanged(Vector2d oldPosition, Vector2d newPosition, IMapElement element) {
 
-        if (!(animals.get(oldPosition).remove((Animal)element)))
-        {
-            System.out.println(animals.get(oldPosition));
-            System.out.println(element);
-        }
+        animals.get(oldPosition).remove((Animal)element);
+
         if (animals.containsKey(newPosition))
         {
             animals.get(newPosition).add((Animal) element);
@@ -250,11 +258,91 @@ public class EvolutionMap implements IPositionChangeObserver {
         }
     }
 
-    public int numberOfAnimals() {
+    public int numberOfAnimals()
+    {
         return animalList.size();
     }
 
-    public void createMagicAnimals() {
+    public int numberOfGrass()
+    {
+        return grass.size();
+    }
 
+    public void createMagicAnimals()
+    {
+        Random random = new Random();
+        Vector2d tmp = new Vector2d(random.nextInt(width),random.nextInt(height));
+        while (animals.get(tmp).size() > 0)
+        {
+            tmp = new Vector2d(random.nextInt(width),random.nextInt(height));
+        }
+
+        HashSet<Animal> tmpList = (HashSet<Animal>) animalList.clone();
+        for (Animal animal : tmpList)
+        {
+            new Animal(animal, tmp);
+        }
+    }
+
+    public ArrayList<Integer> getDominant()
+    {
+        Integer max = Collections.max(genotype.values(), Integer::compareTo);
+        for (Genes gene : genotype.keySet())
+        {
+            if (genotype.get(gene).equals(max))
+            {
+                return gene.getGenes();
+            }
+        }
+        return null;
+    }
+
+    public HashMap<Vector2d, Grass> getGrass() {
+        return grass;
+    }
+
+    public HashMap<Vector2d, HashSet<Animal>> getAnimals() {
+        return animals;
+    }
+
+    public int averageEnergy()
+    {
+        int tmp = 0;
+        for (Animal animal : animalList)
+        {
+            tmp += animal.getEnergy();
+        }
+
+        if (animalList.size() != 0)
+        {
+            return tmp/animalList.size();
+        }
+        else
+        {
+            return 0;
+        }
+
+    }
+
+    public int averageChildren()
+    {
+        int tmp = 0;
+        for (Animal animal : animalList)
+        {
+            tmp += animal.getChildren().size();
+        }
+
+        if (animalList.size() != 0)
+        {
+            return tmp/animalList.size();
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    public int getAverageLifeTime() {
+        return averageLifeTime;
     }
 }
