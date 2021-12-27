@@ -257,7 +257,6 @@ public class EvolutionMap implements IPositionChangeObserver {
         {
             return Collections.max(animals.get(position), Comparator.comparingInt(Animal::getEnergy));
         }
-
         return null;
     }
 

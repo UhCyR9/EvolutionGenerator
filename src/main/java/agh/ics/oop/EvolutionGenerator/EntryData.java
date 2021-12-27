@@ -8,8 +8,8 @@ public class EntryData {
     public static int startEnergy = 100;
     public static int moveEnergy = 1;
     public static int plantEnergy = 20;
-    public static int jungleWidth = 5;
-    public static int jungleHeight = 5;
+    public static int jungleWidth = 6;
+    public static int jungleHeight = 6;
     public static int startAnimalQuantity =10;
     public static int breakTime = 300;
 

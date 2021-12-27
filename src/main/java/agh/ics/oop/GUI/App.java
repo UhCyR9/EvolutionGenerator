@@ -47,7 +47,8 @@ public class App extends Application {
     private VBox walledWrapper;
     private SimulationEngine wrappedSimulation;
     private SimulationEngine walledSimulation;
-    private AnimalTracker chosenAnimalInfo;
+    private AnimalTracker wrappedChosenAnimalInfo;
+    private AnimalTracker walledChosenAnimalInfo;
 
 
     @Override
@@ -172,6 +173,27 @@ public class App extends Application {
         wrappedGrid = new GridPane();
         walledGrid = new GridPane();
 
+        drawObjects(wrappedMap, wrappedGrid);
+        drawObjects(walledMap, walledGrid);
+
+        Button wrappedStopButton = new Button("START/STOP");
+        Button walledStopButton = new Button("START/STOP");
+        Button wrappedGenotype = new Button("DOMINUJACY GENOM");
+        Button walledGenotype = new Button("DOMINUJACY GENOM");
+        Button wrappedSave = new Button("SAVE");
+        Button walledSave = new Button("SAVE");
+
+        Text wrappedMagicCounter = new Text("ILOSC MAGII: 0");
+        Text walledMagicCounter = new Text("ILOSC MAGII: 0");
+
+
+        wrappedWrapper = new VBox(10,wrappedGrid,wrappedDominant,wrappedStopButton,wrappedGenotype,wrappedSave, wrappedMagicCounter, new VBox());
+        walledWrapper = new VBox(10,walledGrid,walledDominant,walledStopButton,walledGenotype,walledSave, walledMagicCounter, new VBox());
+
+
+        this.wrappedChart = new Chart(wrappedMap);
+        this.walledChart = new Chart(walledMap);
+
         for (Animal animal : wrappedMap.getAnimalList())
         {
             ImageView imageView = animal.getImageView();
@@ -180,7 +202,7 @@ public class App extends Application {
                 {
                     if (animal2.getImageView().equals(event.getTarget()))
                     {
-                        this.chosenAnimalInfo = new AnimalTracker(wrappedMap, animal2);
+                        this.wrappedChosenAnimalInfo = new AnimalTracker(wrappedMap, animal2, wrappedChart);
                         break;
                     }
                 }
@@ -196,34 +218,14 @@ public class App extends Application {
                 {
                     if (animal2.getImageView().equals(event.getTarget()))
                     {
-                        this.chosenAnimalInfo = new AnimalTracker(walledMap, animal2);
+                        this.walledChosenAnimalInfo = new AnimalTracker(walledMap, animal2, walledChart);
+
                         break;
                     }
                 }
                 event.consume();
             });
         }
-
-        drawObjects(wrappedMap, wrappedGrid);
-        drawObjects(walledMap, walledGrid);
-
-        Button wrappedStopButton = new Button("START/STOP");
-        Button walledStopButton = new Button("START/STOP");
-        Button wrappedGenotype = new Button("DOMINUJACY GENOM");
-        Button walledGenotype = new Button("DOMINUJACY GENOM");
-        Button wrappedSave = new Button("SAVE");
-        Button walledSave = new Button("SAVE");
-
-        Text wrappedMagicCounter = new Text("ILOSC MAGII: 0");
-        Text walledMagicCounter = new Text("ILOSC MAGII: 0");
-
-
-        wrappedWrapper = new VBox(10,wrappedGrid,wrappedDominant,wrappedStopButton,wrappedGenotype,wrappedSave, wrappedMagicCounter);
-        walledWrapper = new VBox(10,walledGrid,walledDominant,walledStopButton,walledGenotype,walledSave, walledMagicCounter);
-
-
-        this.wrappedChart = new Chart(wrappedMap);
-        this.walledChart = new Chart(walledMap);
 
         HBox wrapper = new HBox(30,wrappedChart.getLineChart(), wrappedWrapper,walledChart.getLineChart(), walledWrapper);
         mainScene.setRoot(wrapper);
@@ -346,10 +348,6 @@ public class App extends Application {
 
     }
 
-    public void setChosenAnimalInfo(EvolutionMap map, Animal animal)
-    {
-        this.chosenAnimalInfo = new AnimalTracker(map, animal);
-    }
 
     public void positionChanged(EvolutionMap map)
     {
@@ -365,6 +363,22 @@ public class App extends Application {
                 walledChart.updateChart();
                 drawObjects(walledMap, walledGrid);
                 walledDominant.setText(String.valueOf(walledMap.getDominant()));
+            });
+        }
+
+        if (wrappedChosenAnimalInfo != null) {
+            Platform.runLater(() -> {
+                wrappedChosenAnimalInfo.updateInformation();
+                    wrappedWrapper.getChildren().remove(6);
+                    wrappedWrapper.getChildren().add(wrappedChosenAnimalInfo.getVbox());
+            });
+        }
+
+        if (walledChosenAnimalInfo != null) {
+            Platform.runLater(() -> {
+                walledChosenAnimalInfo.updateInformation();
+                walledWrapper.getChildren().remove(6);
+                walledWrapper.getChildren().add(walledChosenAnimalInfo.getVbox());
             });
         }
     }
