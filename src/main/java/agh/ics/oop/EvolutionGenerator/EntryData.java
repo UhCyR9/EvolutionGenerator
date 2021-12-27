@@ -10,7 +10,7 @@ public class EntryData {
     public static int plantEnergy = 20;
     public static int jungleWidth = 5;
     public static int jungleHeight = 5;
-    public static int startAnimalQuantity = 10;
+    public static int startAnimalQuantity =10;
     public static int breakTime = 300;
 
 

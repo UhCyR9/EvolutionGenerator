@@ -13,7 +13,9 @@ public class Grass implements IMapElement {
     private Vector2d position;
     private ImageView imageView;
 
-     public Grass() {
+     public Grass(Vector2d position) {
+         this.position = position;
+
         Image image = null;
         try {
             image = new Image(new FileInputStream("src/main/resources/grass.jpg"));
@@ -22,8 +24,8 @@ public class Grass implements IMapElement {
         }
 
         imageView = new ImageView(image);
-        imageView.setFitWidth(450/ EntryData.width);
-        imageView.setFitHeight(450/EntryData.width);
+        imageView.setFitWidth(Math.round((double)(450/EntryData.width)));
+        imageView.setFitHeight(Math.round((double)(450/EntryData.width)));
     }
 
 

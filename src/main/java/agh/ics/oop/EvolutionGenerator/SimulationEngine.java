@@ -10,6 +10,7 @@ public class SimulationEngine implements Runnable {
     private int magicUsed = 0;
     private App GUI;
     private boolean running = true;
+    private boolean turnedOn = true;
 
 
     public SimulationEngine(EvolutionMap map, boolean isMagic, App GUI)
@@ -24,9 +25,14 @@ public class SimulationEngine implements Runnable {
         running = !running;
     }
 
+    public void turnoff()
+    {
+        turnedOn = !turnedOn;
+    }
+
     public void run()
     {
-        while (true) {
+        while (turnedOn) {
             if (running) {
                 map.moveAnimals();
                 map.eatGrass();

@@ -9,6 +9,7 @@ import agh.ics.oop.EvolutionGenerator.SimulationEngine;
 import javafx.application.Application;
 
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
@@ -17,12 +18,13 @@ import javafx.scene.Scene;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.scene.control.*;
-import org.w3c.dom.Text;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -39,12 +41,14 @@ public class App extends Application {
     private GridPane walledGrid;
     private Chart wrappedChart;
     private Chart walledChart;
-    private TextField wrappedDominant = new TextField();
-    private TextField walledDominant = new TextField();
+    private final Text wrappedDominant = new Text();
+    private final Text walledDominant = new Text();
     private VBox wrappedWrapper;
     private VBox walledWrapper;
     private SimulationEngine wrappedSimulation;
     private SimulationEngine walledSimulation;
+    private Animal chosenAnimal;
+
 
     @Override
     public void init() throws Exception {
@@ -52,7 +56,7 @@ public class App extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
         createStartScene();
         primaryStage.setScene(mainScene);
         primaryStage.show();
@@ -178,16 +182,13 @@ public class App extends Application {
         Button wrappedSave = new Button("SAVE");
         Button walledSave = new Button("SAVE");
 
-        TextField wrappedMagicCounter = new TextField("ILOSC MAGII: 0");
-        TextField walledMagicCounter = new TextField("ILOSC MAGII: 0");
-        wrappedMagicCounter.setEditable(false);
-        walledMagicCounter.setEditable(false);
+        Text wrappedMagicCounter = new Text("ILOSC MAGII: 0");
+        Text walledMagicCounter = new Text("ILOSC MAGII: 0");
+
 
         wrappedWrapper = new VBox(10,wrappedGrid,wrappedDominant,wrappedStopButton,wrappedGenotype,wrappedSave, wrappedMagicCounter);
         walledWrapper = new VBox(10,walledGrid,walledDominant,walledStopButton,walledGenotype,walledSave, walledMagicCounter);
 
-        wrappedDominant.setEditable(false);
-        walledDominant.setEditable(false);
 
         this.wrappedChart = new Chart(wrappedMap);
         this.walledChart = new Chart(walledMap);
@@ -199,17 +200,16 @@ public class App extends Application {
     public void magicIndicator(EvolutionMap map, int count)
     {
         Platform.runLater(() -> {
+            Text text;
             if (map == wrappedMap)
             {
-                TextField text = (TextField) wrappedWrapper.getChildren().get(5);
-                text.setText("ILOSC MAGII: " + count);
-
+                text = (Text) wrappedWrapper.getChildren().get(5);
             }
             else
             {
-                TextField text = (TextField) walledWrapper.getChildren().get(5);
-                text.setText("ILOSC MAGII: " + count);
+                text = (Text) walledWrapper.getChildren().get(5);
             }
+            text.setText("ILOSC MAGII: " + count);
         });
 
     }
@@ -233,24 +233,30 @@ public class App extends Application {
             if (box.getChildren().get(0) == wrappedGrid)
             {
                 ColorAdjust changeColor = new ColorAdjust();
-                changeColor.setBrightness(0.5);
+                changeColor.setBrightness(0.8);
                 for (Animal animal : wrappedMap.getAnimalList())
                 {
                     if (wrappedMap.getDominant().equals(animal.getGenes()))
                     {
-                        animal.getImageView().setEffect(changeColor);
+                        for (Animal colorAnimal : wrappedMap.getAnimals().get(animal.getPosition()))
+                        {
+                            colorAnimal.getImageView().setEffect(changeColor);
+                        }
                     }
                 }
             }
             else
             {
                 ColorAdjust changeColor = new ColorAdjust();
-                changeColor.setBrightness(0.5);
+                changeColor.setBrightness(0.8);
                 for (Animal animal : walledMap.getAnimalList())
                 {
-                    if (wrappedMap.getDominant().equals(animal.getGenes()))
+                    if (walledMap.getDominant().equals(animal.getGenes()))
                     {
-                        animal.getImageView().setEffect(changeColor);
+                        for (Animal colorAnimal : walledMap.getAnimals().get(animal.getPosition()))
+                        {
+                            colorAnimal.getImageView().setEffect(changeColor);
+                        }
                     }
                 }
             }
@@ -273,8 +279,8 @@ public class App extends Application {
             for (int j = 0; j < EntryData.height; j++)
             {
                 ImageView dirt = new ImageView(image);
-                dirt.setFitWidth((int)(450/EntryData.width));
-                dirt.setFitHeight((int)(450/EntryData.width));
+                dirt.setFitWidth(Math.round((double)(450/EntryData.width)));
+                dirt.setFitHeight(Math.round((double)(450/EntryData.width)));
                 grid.add(dirt,i,j);
             }
         }
@@ -288,15 +294,22 @@ public class App extends Application {
 
         for (Vector2d animalPos : animals.keySet())
         {
-            for (Animal animal : animals.get(animalPos))
-            {
-                if (animal != null)
-                {
-                    grid.add(animal.getImageView(),animalPos.x,animalPos.y);
-                }
-
+            if (animals.get(animalPos).size() > 0) {
+                ImageView toEvent = evolutionMap.objectAt(animalPos).getImageView();
+                toEvent.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                    for (Animal animal : evolutionMap.getAnimalList())
+                    {
+                        if (animal.getImageView().equals(event.getTarget()))
+                        {
+                            chosenAnimal = animal;
+                        }
+                    }
+                    event.consume();
+                });
+                grid.add(toEvent, animalPos.x, animalPos.y);
             }
         }
+
     }
 
     public void positionChanged(EvolutionMap map)
@@ -328,5 +341,12 @@ public class App extends Application {
         Thread walledThread = new Thread(walledSimulation);
         wrappedThread.start();
         walledThread.start();
+    }
+
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+        wrappedSimulation.turnoff();
+        walledSimulation.turnoff();
     }
 }

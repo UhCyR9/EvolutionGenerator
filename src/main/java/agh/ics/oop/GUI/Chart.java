@@ -31,6 +31,7 @@ public class Chart {
         yAxis.setAnimated(false);
 
         LineChart<String, Number> lineChart = new LineChart<>(xAxis, yAxis);
+        lineChart.setCreateSymbols(false);
 
         lineChart.setTitle("DANE");
         lineChart.setAnimated(false);
@@ -84,5 +85,9 @@ public class Chart {
                 tmp.getData().remove(0);
             }
         }
+    }
+
+    public int getEpoch() {
+        return epoch;
     }
 }

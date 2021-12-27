@@ -29,7 +29,17 @@ public class Animal implements IMapElement {
     private ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
     private int toHashCode;
     private ImageView imageView;
+    private static Image image;
 
+
+    static {
+        image = null;
+        try {
+            image = new Image(new FileInputStream("src/main/resources/animal.jpg"));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 
     public Animal(Vector2d position, EvolutionMap map) //początkowe zwierzęta
     {
@@ -45,16 +55,9 @@ public class Animal implements IMapElement {
         this.direction = MapDirection.values()[random.nextInt(MapDirection.values().length)];
         this.map.place(this);
 
-        Image image = null;
-        try {
-            image = new Image(new FileInputStream("src/main/resources/animal.jpg"));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
         imageView = new ImageView(image);
-        imageView.setFitWidth((int)(450/EntryData.width));
-        imageView.setFitHeight((int)(450/EntryData.width));
+        imageView.setFitWidth(Math.round((double)(450/EntryData.width)));
+        imageView.setFitHeight(Math.round((double)(450/EntryData.width)));
 //        imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 //
 //            @Override
@@ -80,16 +83,9 @@ public class Animal implements IMapElement {
         this.direction = MapDirection.values()[random.nextInt(MapDirection.values().length)];
         this.map.place(this);
 
-        Image image = null;
-        try {
-            image = new Image(new FileInputStream("src/main/resources/animal.jpg"));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
         imageView = new ImageView(image);
-        imageView.setFitWidth((int)(450/EntryData.width));
-        imageView.setFitHeight((int)(450/EntryData.width));
+        imageView.setFitWidth(Math.round((double)(450/EntryData.width)));
+        imageView.setFitHeight(Math.round((double)(450/EntryData.width)));
     }
 
     public Animal(Animal parent1, Animal parent2) //dziecko
@@ -112,16 +108,9 @@ public class Animal implements IMapElement {
         this.direction = MapDirection.values()[random.nextInt(MapDirection.values().length)];
         this.map.place(this);
 
-        Image image = null;
-        try {
-            image = new Image(new FileInputStream("src/main/resources/animal.jpg"));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
         imageView = new ImageView(image);
-        imageView.setFitWidth((int)(450/EntryData.width));
-        imageView.setFitHeight((int)(450/EntryData.width));
+        imageView.setFitWidth(Math.round((double)(450/EntryData.width)));
+        imageView.setFitHeight(Math.round((double)(450/EntryData.width)));
     }
 
 
@@ -176,10 +165,6 @@ public class Animal implements IMapElement {
         return map;
     }
 
-    public ArrayList<IPositionChangeObserver> getObservers() {
-        return observers;
-    }
-
     public ArrayList<Integer> getGenes() {
         return genes.getGenes();
     }
@@ -221,6 +206,7 @@ public class Animal implements IMapElement {
     {
         observers.add(observer);
     }
+
 
     @Override
     public int hashCode() {
