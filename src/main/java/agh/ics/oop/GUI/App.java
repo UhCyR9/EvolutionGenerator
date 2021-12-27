@@ -47,7 +47,7 @@ public class App extends Application {
     private VBox walledWrapper;
     private SimulationEngine wrappedSimulation;
     private SimulationEngine walledSimulation;
-    private Animal chosenAnimal;
+    private AnimalTracker chosenAnimalInfo;
 
 
     @Override
@@ -172,11 +172,43 @@ public class App extends Application {
         wrappedGrid = new GridPane();
         walledGrid = new GridPane();
 
+        for (Animal animal : wrappedMap.getAnimalList())
+        {
+            ImageView imageView = animal.getImageView();
+            imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                for (Animal animal2 : wrappedMap.getAnimalList())
+                {
+                    if (animal2.getImageView().equals(event.getTarget()))
+                    {
+                        this.chosenAnimalInfo = new AnimalTracker(wrappedMap, animal2);
+                        break;
+                    }
+                }
+                event.consume();
+            });
+        }
+
+        for (Animal animal : walledMap.getAnimalList())
+        {
+            ImageView imageView = animal.getImageView();
+            imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                for (Animal animal2 : walledMap.getAnimalList())
+                {
+                    if (animal2.getImageView().equals(event.getTarget()))
+                    {
+                        this.chosenAnimalInfo = new AnimalTracker(walledMap, animal2);
+                        break;
+                    }
+                }
+                event.consume();
+            });
+        }
+
         drawObjects(wrappedMap, wrappedGrid);
         drawObjects(walledMap, walledGrid);
 
-        Button wrappedStopButton = new Button("STOP");
-        Button walledStopButton = new Button("STOP");
+        Button wrappedStopButton = new Button("START/STOP");
+        Button walledStopButton = new Button("START/STOP");
         Button wrappedGenotype = new Button("DOMINUJACY GENOM");
         Button walledGenotype = new Button("DOMINUJACY GENOM");
         Button wrappedSave = new Button("SAVE");
@@ -225,6 +257,18 @@ public class App extends Application {
             else
             {
                 walledSimulation.toggle();
+            }
+        });
+
+        Button save = (Button) box.getChildren().get(4);
+        save.setOnAction(event -> {
+            if (box.getChildren().get(0) == wrappedGrid)
+            {
+                CSVCreator.writeDataLineByLine(wrappedChart.getHistoryData());
+            }
+            else
+            {
+                CSVCreator.writeDataLineByLine(walledChart.getHistoryData());
             }
         });
 
@@ -296,20 +340,15 @@ public class App extends Application {
         {
             if (animals.get(animalPos).size() > 0) {
                 ImageView toEvent = evolutionMap.objectAt(animalPos).getImageView();
-                toEvent.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-                    for (Animal animal : evolutionMap.getAnimalList())
-                    {
-                        if (animal.getImageView().equals(event.getTarget()))
-                        {
-                            chosenAnimal = animal;
-                        }
-                    }
-                    event.consume();
-                });
                 grid.add(toEvent, animalPos.x, animalPos.y);
             }
         }
 
+    }
+
+    public void setChosenAnimalInfo(EvolutionMap map, Animal animal)
+    {
+        this.chosenAnimalInfo = new AnimalTracker(map, animal);
     }
 
     public void positionChanged(EvolutionMap map)

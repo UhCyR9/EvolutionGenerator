@@ -18,6 +18,7 @@ public class Chart {
     private XYChart.Series<String,Number> lifetimeSeries;
     private XYChart.Series<String,Number> childrenSeries;
     private int epoch = 0;
+    private ArrayList<String[]> historyData = new ArrayList<>();
 
     public Chart(EvolutionMap map)
     {
@@ -78,6 +79,9 @@ public class Chart {
         lifetimeSeries.getData().add(new XYChart.Data<>(String.valueOf(epoch),map.getAverageLifeTime()));
         childrenSeries.getData().add(new XYChart.Data<>(String.valueOf(epoch), map.averageChildren()));
 
+        String[] toHistory = {String.valueOf(epoch),String.valueOf(map.numberOfAnimals()),String.valueOf(map.numberOfGrass()), String.valueOf(map.averageEnergy()), String.valueOf(map.getAverageLifeTime()), String.valueOf(map.averageChildren())};
+        historyData.add(toHistory);
+
         for (XYChart.Series<String,Number> tmp : series)
         {
             if (tmp.getData().size() > MAX_SIZE)
@@ -85,6 +89,10 @@ public class Chart {
                 tmp.getData().remove(0);
             }
         }
+    }
+
+    public ArrayList<String[]> getHistoryData() {
+        return historyData;
     }
 
     public int getEpoch() {

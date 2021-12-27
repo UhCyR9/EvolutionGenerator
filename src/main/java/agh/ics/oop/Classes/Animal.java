@@ -58,14 +58,6 @@ public class Animal implements IMapElement {
         imageView = new ImageView(image);
         imageView.setFitWidth(Math.round((double)(450/EntryData.width)));
         imageView.setFitHeight(Math.round((double)(450/EntryData.width)));
-//        imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-//
-//            @Override
-//            public void handle(MouseEvent event) {
-//                System.out.println("test");
-//                event.consume();
-//            }
-//        });
     }
 
 
@@ -111,6 +103,17 @@ public class Animal implements IMapElement {
         imageView = new ImageView(image);
         imageView.setFitWidth(Math.round((double)(450/EntryData.width)));
         imageView.setFitHeight(Math.round((double)(450/EntryData.width)));
+        imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            for (Animal animal : map.getAnimalList())
+            {
+                if (animal.getImageView().equals(event.getTarget()))
+                {
+
+                    break;
+                }
+            }
+            event.consume();
+        });
     }
 
 
