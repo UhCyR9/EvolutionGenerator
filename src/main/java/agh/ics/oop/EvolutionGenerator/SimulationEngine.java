@@ -9,6 +9,7 @@ public class SimulationEngine implements Runnable {
     private boolean isMagic;
     private int magicUsed = 0;
     private App GUI;
+    private boolean running = true;
 
 
     public SimulationEngine(EvolutionMap map, boolean isMagic, App GUI)
@@ -18,21 +19,28 @@ public class SimulationEngine implements Runnable {
         this.GUI = GUI;
     }
 
+    public void toggle()
+    {
+        running = !running;
+    }
+
     public void run()
     {
         while (true) {
-            map.moveAnimals();
-            map.eatGrass();
-            map.breedAnimals();
-            map.addGrass();
+            if (running) {
+                map.moveAnimals();
+                map.eatGrass();
+                map.breedAnimals();
+                map.addGrass();
 
-            if (isMagic && map.numberOfAnimals() <= 5 && magicUsed < 3) {
-                map.createMagicAnimals();
-                magicUsed += 1;
-                System.out.println("dziala");
+                if (isMagic && map.numberOfAnimals() <= 5 && magicUsed < 3) {
+                    map.createMagicAnimals();
+                    magicUsed += 1;
+                    GUI.magicIndicator(map, magicUsed);
+                }
+
+                GUI.positionChanged(this.map);
             }
-
-            GUI.positionChanged();
             try {
                 Thread.sleep(EntryData.breakTime);
             } catch (InterruptedException e) {

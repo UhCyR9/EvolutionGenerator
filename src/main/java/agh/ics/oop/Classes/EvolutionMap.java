@@ -18,7 +18,7 @@ public class EvolutionMap implements IPositionChangeObserver {
     private HashMap<Vector2d, HashSet<Animal>> animals = new HashMap<>();
     private HashSet<Animal> animalList = new HashSet<>();
     private HashMap<Genes, Integer> genotype = new HashMap<>();
-    private int averageLifeTime=0;
+    private int averageLifeTime = 0;
 
 
     public HashSet<Animal> getAnimalList() {
@@ -92,7 +92,7 @@ public class EvolutionMap implements IPositionChangeObserver {
             if (animal.getEnergy() <= 0)
             {
                 toRemove.add(animal);
-                averageLifeTime += animal.getAge()/2;
+                averageLifeTime = (averageLifeTime + animal.getAge())/2;
             }
             else
             {
@@ -136,45 +136,62 @@ public class EvolutionMap implements IPositionChangeObserver {
             tset.add(parent2);
         }
     }
-
     public synchronized void eatGrass()
     {
-        ArrayList<Vector2d> toRemove = new ArrayList<>();
-        for (Vector2d grassPos : grass.keySet())
+        for(HashSet<Animal> hSet : animals.values())
         {
-            ArrayList<Animal> tmp = new ArrayList<>();
-            if (animals.containsKey(grassPos))
+            if(hSet.size() <= 0)
             {
-                if(animals.get(grassPos).size() == 0)
-                {
-                    return;
-                }
+                return;
+            }
+            Animal animal1 = Collections.max(hSet, Comparator.comparingInt(Animal::getEnergy));
 
-                Animal animal1 = Collections.max(animals.get(grassPos), Comparator.comparingInt(Animal::getEnergy));
-                tmp.add(animal1);
-
-                for (Animal animal : animals.get(grassPos))
-                {
-                    if (animal.getEnergy() == animal1.getEnergy() && !(animal.equals(animal1)))
-                    {
-                        tmp.add(animal);
-                    }
-                }
-
-                int energyForAll = EntryData.plantEnergy / tmp.size(); // równy podział energii
-
-                for (Animal animal : tmp)   // rozdanie energii
-                {
-                    animal.setEnergy(animal.getEnergy()+energyForAll);
-                }
-                toRemove.add(grassPos);
+            if (grass.containsKey(animal1.getPosition()))
+            {
+                animal1.setEnergy(animal1.getEnergy()+EntryData.plantEnergy);
+                grass.remove(animal1.getPosition());
             }
         }
-        for (Vector2d pos : toRemove)
-        {
-            grass.remove(pos);
-        }
     }
+
+//    public synchronized void eatGrass()
+//    {
+//        ArrayList<Vector2d> toRemove = new ArrayList<>();
+//        for (Vector2d grassPos : grass.keySet())
+//        {
+//            ArrayList<Animal> tmp = new ArrayList<>();
+//            if (animals.containsKey(grassPos))
+//            {
+//                if(animals.get(grassPos).size() == 0)
+//                {
+//                    return;
+//                }
+//
+//                Animal animal1 = Collections.max(animals.get(grassPos), Comparator.comparingInt(Animal::getEnergy));
+//                tmp.add(animal1);
+//
+//                for (Animal animal : animals.get(grassPos))
+//                {
+//                    if (animal.getEnergy() == animal1.getEnergy() && !(animal.equals(animal1)))
+//                    {
+//                        tmp.add(animal);
+//                    }
+//                }
+//
+//                int energyForAll = EntryData.plantEnergy / tmp.size(); // równy podział energii
+//
+//                for (Animal animal : tmp)   // rozdanie energii
+//                {
+//                    animal.setEnergy(animal.getEnergy()+energyForAll);
+//                }
+//                toRemove.add(grassPos);
+//            }
+//        }
+//        for (Vector2d pos : toRemove)
+//        {
+//            grass.remove(pos);
+//        }
+//    }
 
     public synchronized void addGrass(){
         Random random = new Random();

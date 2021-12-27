@@ -14,12 +14,15 @@ import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.scene.control.*;
+import org.w3c.dom.Text;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -36,6 +39,12 @@ public class App extends Application {
     private GridPane walledGrid;
     private Chart wrappedChart;
     private Chart walledChart;
+    private TextField wrappedDominant = new TextField();
+    private TextField walledDominant = new TextField();
+    private VBox wrappedWrapper;
+    private VBox walledWrapper;
+    private SimulationEngine wrappedSimulation;
+    private SimulationEngine walledSimulation;
 
     @Override
     public void init() throws Exception {
@@ -145,9 +154,11 @@ public class App extends Application {
             EntryData.setInitialValues(values);
             drawMaps();
             startSimulation(wrappedMapChoice.getValue(),walledMapChoice.getValue());
+            setUpButtons(wrappedWrapper);
+            setUpButtons(walledWrapper);
         });
 
-        mainScene = new Scene(grid,1500,1000);
+        mainScene = new Scene(grid,1600,1000);
     }
 
     private void drawMaps()
@@ -157,25 +168,99 @@ public class App extends Application {
         wrappedGrid = new GridPane();
         walledGrid = new GridPane();
 
-        addBackground();
         drawObjects(wrappedMap, wrappedGrid);
         drawObjects(walledMap, walledGrid);
 
         Button wrappedStopButton = new Button("STOP");
         Button walledStopButton = new Button("STOP");
+        Button wrappedGenotype = new Button("DOMINUJACY GENOM");
+        Button walledGenotype = new Button("DOMINUJACY GENOM");
+        Button wrappedSave = new Button("SAVE");
+        Button walledSave = new Button("SAVE");
 
+        TextField wrappedMagicCounter = new TextField("ILOSC MAGII: 0");
+        TextField walledMagicCounter = new TextField("ILOSC MAGII: 0");
+        wrappedMagicCounter.setEditable(false);
+        walledMagicCounter.setEditable(false);
+
+        wrappedWrapper = new VBox(10,wrappedGrid,wrappedDominant,wrappedStopButton,wrappedGenotype,wrappedSave, wrappedMagicCounter);
+        walledWrapper = new VBox(10,walledGrid,walledDominant,walledStopButton,walledGenotype,walledSave, walledMagicCounter);
+
+        wrappedDominant.setEditable(false);
+        walledDominant.setEditable(false);
 
         this.wrappedChart = new Chart(wrappedMap);
         this.walledChart = new Chart(walledMap);
 
-        HBox wrapper = new HBox(30,wrappedChart.getLineChart(), wrappedGrid,walledChart.getLineChart(), walledGrid);
+        HBox wrapper = new HBox(30,wrappedChart.getLineChart(), wrappedWrapper,walledChart.getLineChart(), walledWrapper);
         mainScene.setRoot(wrapper);
     }
 
-    private void addBackground()
+    public void magicIndicator(EvolutionMap map, int count)
     {
-        walledGrid.getChildren().clear();
-        wrappedGrid.getChildren().clear();
+        Platform.runLater(() -> {
+            if (map == wrappedMap)
+            {
+                TextField text = (TextField) wrappedWrapper.getChildren().get(5);
+                text.setText("ILOSC MAGII: " + count);
+
+            }
+            else
+            {
+                TextField text = (TextField) walledWrapper.getChildren().get(5);
+                text.setText("ILOSC MAGII: " + count);
+            }
+        });
+
+    }
+
+    private void setUpButtons(VBox box)
+    {
+        Button stop = (Button) box.getChildren().get(2);
+        stop.setOnAction(event -> {
+            if (box.getChildren().get(0) == wrappedGrid)
+            {
+                wrappedSimulation.toggle();
+            }
+            else
+            {
+                walledSimulation.toggle();
+            }
+        });
+
+        Button showDominant = (Button) box.getChildren().get(3);
+        showDominant.setOnAction(event -> {
+            if (box.getChildren().get(0) == wrappedGrid)
+            {
+                ColorAdjust changeColor = new ColorAdjust();
+                changeColor.setBrightness(0.5);
+                for (Animal animal : wrappedMap.getAnimalList())
+                {
+                    if (wrappedMap.getDominant().equals(animal.getGenes()))
+                    {
+                        animal.getImageView().setEffect(changeColor);
+                    }
+                }
+            }
+            else
+            {
+                ColorAdjust changeColor = new ColorAdjust();
+                changeColor.setBrightness(0.5);
+                for (Animal animal : walledMap.getAnimalList())
+                {
+                    if (wrappedMap.getDominant().equals(animal.getGenes()))
+                    {
+                        animal.getImageView().setEffect(changeColor);
+                    }
+                }
+            }
+        });
+    }
+
+    private void drawObjects(EvolutionMap evolutionMap, GridPane grid)
+    {
+        grid.getChildren().clear();
+
         Image image = null;
         try {
             image = new Image(new FileInputStream("src/main/resources/dirt.jpg"));
@@ -188,20 +273,12 @@ public class App extends Application {
             for (int j = 0; j < EntryData.height; j++)
             {
                 ImageView dirt = new ImageView(image);
-                dirt.setFitWidth(20);
-                dirt.setFitHeight(20);
-                wrappedGrid.add(dirt,i,j);
-
-                ImageView dirt2 = new ImageView(image);
-                dirt2.setFitWidth(20);
-                dirt2.setFitHeight(20);
-                walledGrid.add(dirt2,i,j);
+                dirt.setFitWidth((int)(450/EntryData.width));
+                dirt.setFitHeight((int)(450/EntryData.width));
+                grid.add(dirt,i,j);
             }
         }
-    }
 
-    private void drawObjects(EvolutionMap evolutionMap, GridPane grid)
-    {
         HashMap<Vector2d,Grass> grassList = (HashMap<Vector2d, Grass>) evolutionMap.getGrass().clone();
         HashMap<Vector2d,HashSet<Animal>> animals = (HashMap<Vector2d, HashSet<Animal>>) evolutionMap.getAnimals().clone();
         for (Vector2d grassPos : grassList.keySet())
@@ -222,15 +299,22 @@ public class App extends Application {
         }
     }
 
-    public void positionChanged()
+    public void positionChanged(EvolutionMap map)
     {
-        Platform.runLater(() -> {
-            wrappedChart.updateChart();
-            walledChart.updateChart();
-            addBackground();
-            drawObjects(wrappedMap, wrappedGrid);
-            drawObjects(walledMap, walledGrid);
-        });
+        if (map.equals(wrappedMap)) {
+            Platform.runLater(() -> {
+                wrappedChart.updateChart();
+                drawObjects(wrappedMap, wrappedGrid);
+                wrappedDominant.setText(String.valueOf(wrappedMap.getDominant()));
+            });
+        }
+        else {
+            Platform.runLater(() -> {
+                walledChart.updateChart();
+                drawObjects(walledMap, walledGrid);
+                walledDominant.setText(String.valueOf(walledMap.getDominant()));
+            });
+        }
     }
 
     private void startSimulation(String wrappedInfo, String walledInfo)
@@ -238,8 +322,8 @@ public class App extends Application {
         boolean wrappedMagic = !wrappedInfo.equals("ZWYKLA");
         boolean walledMagic = !walledInfo.equals("ZWYKLA");
 
-        SimulationEngine wrappedSimulation = new SimulationEngine(wrappedMap,wrappedMagic, this);
-        SimulationEngine walledSimulation = new SimulationEngine(walledMap,walledMagic,this);
+        wrappedSimulation = new SimulationEngine(wrappedMap,wrappedMagic, this);
+        walledSimulation = new SimulationEngine(walledMap,walledMagic,this);
         Thread wrappedThread = new Thread(wrappedSimulation);
         Thread walledThread = new Thread(walledSimulation);
         wrappedThread.start();

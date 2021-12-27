@@ -4,8 +4,12 @@ import agh.ics.oop.EnumClasses.MapDirection;
 import agh.ics.oop.EvolutionGenerator.EntryData;
 import agh.ics.oop.Interfaces.IMapElement;
 import agh.ics.oop.Interfaces.IPositionChangeObserver;
+import javafx.event.EventHandler;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -49,8 +53,16 @@ public class Animal implements IMapElement {
         }
 
         imageView = new ImageView(image);
-        imageView.setFitWidth(20);
-        imageView.setFitHeight(20);
+        imageView.setFitWidth((int)(450/EntryData.width));
+        imageView.setFitHeight((int)(450/EntryData.width));
+//        imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+//
+//            @Override
+//            public void handle(MouseEvent event) {
+//                System.out.println("test");
+//                event.consume();
+//            }
+//        });
     }
 
 
@@ -76,8 +88,8 @@ public class Animal implements IMapElement {
         }
 
         imageView = new ImageView(image);
-        imageView.setFitWidth(20);
-        imageView.setFitHeight(20);
+        imageView.setFitWidth((int)(450/EntryData.width));
+        imageView.setFitHeight((int)(450/EntryData.width));
     }
 
     public Animal(Animal parent1, Animal parent2) //dziecko
@@ -108,8 +120,8 @@ public class Animal implements IMapElement {
         }
 
         imageView = new ImageView(image);
-        imageView.setFitWidth(20);
-        imageView.setFitHeight(20);
+        imageView.setFitWidth((int)(450/EntryData.width));
+        imageView.setFitHeight((int)(450/EntryData.width));
     }
 
 
@@ -216,6 +228,23 @@ public class Animal implements IMapElement {
     }
 
     public ImageView getImageView() {
+        ColorAdjust changeColor = new ColorAdjust();
+        changeColor.setBrightness(0);
+
+        this.imageView.setEffect(changeColor);
+
+        if (this.energy < EntryData.startEnergy/2)
+        {
+            changeColor.setBrightness(-0.5);
+            this.imageView.setEffect(changeColor);
+        }
+
+        if (this.energy < EntryData.startEnergy/4)
+        {
+            changeColor.setBrightness(-0.8);
+            this.imageView.setEffect(changeColor);
+        }
+
         return imageView;
     }
 }

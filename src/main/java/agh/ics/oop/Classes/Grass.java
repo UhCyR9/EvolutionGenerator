@@ -1,5 +1,6 @@
 package agh.ics.oop.Classes;
 
+import agh.ics.oop.EvolutionGenerator.EntryData;
 import agh.ics.oop.Interfaces.IMapElement;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -21,8 +22,8 @@ public class Grass implements IMapElement {
         }
 
         imageView = new ImageView(image);
-        imageView.setFitWidth(20);
-        imageView.setFitHeight(20);
+        imageView.setFitWidth(450/ EntryData.width);
+        imageView.setFitHeight(450/EntryData.width);
     }
 
 
