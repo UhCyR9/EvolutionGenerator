@@ -317,83 +317,94 @@ public class App extends Application {
         });
     }
 
-    private void drawObjects(EvolutionMap evolutionMap, GridPane grid) throws ConcurrentModificationException
+    private void drawObjects(EvolutionMap evolutionMap, GridPane grid) throws ConcurrentModificationException, IllegalArgumentException
     {
-        grid.getChildren().clear();
-
-        Image image = null;
         try {
-            image = new Image(new FileInputStream("src/main/resources/dirt.jpg"));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+            grid.getChildren().clear();
 
-        for (int i = 0; i < EntryData.width; i++)
-        {
-            for (int j = 0; j < EntryData.height; j++)
-            {
-                ImageView dirt = new ImageView(image);
-                dirt.setFitWidth(Math.round((double)(450/EntryData.width)));
-                dirt.setFitHeight(Math.round((double)(450/EntryData.width)));
-                grid.add(dirt,i,j);
+            Image image = null;
+            try {
+                image = new Image(new FileInputStream("src/main/resources/dirt.jpg"));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            for (int i = 0; i < EntryData.width; i++) {
+                for (int j = 0; j < EntryData.height; j++) {
+                    ImageView dirt = new ImageView(image);
+                    dirt.setFitWidth(Math.round((double) (450 / EntryData.width)));
+                    dirt.setFitHeight(Math.round((double) (450 / EntryData.width)));
+                    grid.add(dirt, i, j);
+                }
+            }
+
+            HashMap<Vector2d, Grass> grassList = new HashMap<>(evolutionMap.getGrass());
+            HashMap<Vector2d, HashSet<Animal>> animals = new HashMap<>(evolutionMap.getAnimals());
+            for (Vector2d grassPos : grassList.keySet()) {
+                grid.add(grassList.get(grassPos).getImageView(), grassPos.x, grassPos.y);
+            }
+
+            for (Vector2d animalPos : animals.keySet()) {
+                if (animals.get(animalPos).size() > 0) {
+                    ImageView toEvent = evolutionMap.objectAt(animalPos).getImageView();
+                    grid.add(toEvent, animalPos.x, animalPos.y);
+                }
             }
         }
-
-        HashMap<Vector2d,Grass> grassList = new HashMap<>(evolutionMap.getGrass());
-        HashMap<Vector2d,HashSet<Animal>> animals = new HashMap<>(evolutionMap.getAnimals());
-        for (Vector2d grassPos : grassList.keySet())
+        catch (IllegalArgumentException exception)
         {
-            grid.add(grassList.get(grassPos).getImageView(),grassPos.x,grassPos.y);
-        }
-
-        for (Vector2d animalPos : animals.keySet())
-        {
-            if (animals.get(animalPos).size() > 0) {
-                ImageView toEvent = evolutionMap.objectAt(animalPos).getImageView();
-                grid.add(toEvent, animalPos.x, animalPos.y);
-            }
+            System.out.println("ZDUPLIKOWANY OBRAZEK NA MAPIE");
         }
 
     }
 
 
-    public void positionChanged(EvolutionMap map)
+    public void positionChanged(EvolutionMap map) throws NullPointerException
     {
         Platform.runLater(() -> {
-            for (Animal animal : wrappedMap.getAnimalList())
-            {
-                if (!eventHandlerAdded.contains(animal)) {
-                    eventHandlerAdded.add(animal);
-                    ImageView imageView = animal.getImageView();
-                    imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-                        for (Animal animal2 : wrappedMap.getAnimalList()) {
-                            if (animal2.getImageView().equals(event.getTarget())) {
-                                this.wrappedChosenAnimalInfo = new AnimalTracker(wrappedMap, animal2, wrappedChart);
-                                break;
+            try {
+                for (Animal animal : wrappedMap.getAnimalList()) {
+                    if (!eventHandlerAdded.contains(animal)) {
+                        eventHandlerAdded.add(animal);
+                        ImageView imageView = animal.getImageView();
+                        imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                            for (Animal animal2 : wrappedMap.getAnimalList()) {
+                                if (animal2.getImageView().equals(event.getTarget())) {
+                                    this.wrappedChosenAnimalInfo = new AnimalTracker(wrappedMap, animal2, wrappedChart);
+                                    break;
+                                }
                             }
-                        }
-                        event.consume();
-                    });
+                            event.consume();
+                        });
+                    }
+                }
+
+                for (Animal animal : walledMap.getAnimalList()) {
+                    if (!eventHandlerAdded.contains(animal)) {
+                        eventHandlerAdded.add(animal);
+                        ImageView imageView = animal.getImageView();
+                        imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                            for (Animal animal2 : walledMap.getAnimalList()) {
+                                if (animal2.getImageView().equals(event.getTarget())) {
+                                    this.walledChosenAnimalInfo = new AnimalTracker(walledMap, animal2, walledChart);
+                                    break;
+                                }
+                            }
+                            event.consume();
+                        });
+                    }
                 }
             }
-
-            for (Animal animal : walledMap.getAnimalList())
+            catch (NullPointerException exception)
             {
-                if (!eventHandlerAdded.contains(animal)) {
-                    eventHandlerAdded.add(animal);
-                    ImageView imageView = animal.getImageView();
-                    imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-                        for (Animal animal2 : walledMap.getAnimalList()) {
-                            if (animal2.getImageView().equals(event.getTarget())) {
-                                this.walledChosenAnimalInfo = new AnimalTracker(walledMap, animal2, walledChart);
-                                break;
-                            }
-                        }
-                        event.consume();
-                    });
-                }
+                System.out.println("IMAGEVIEW NIE ZDAZYL SIE ZALADOWAC");
+            }
+            catch (ConcurrentModificationException exception)
+            {
+                System.out.println("ZBYT KROTKI CZAS POMIEDZY KOLEJNYMI DNIAMI");
             }
         });
+
 
         if (map.equals(wrappedMap)) {
             Platform.runLater(() -> {
