@@ -9,13 +9,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class AnimalTracker {
-    private EvolutionMap map;
-    private Animal animal;
-    private ArrayList<Integer> genes;
-    private ArrayList<Animal> startingChildren;
-    private int numberOfChildren;
+    private final EvolutionMap map;
+    private final Animal animal;
+    private final ArrayList<Animal> startingChildren;
     private int epochOfDeath = -1;
-    private Chart chart;
+    private final Chart chart;
     private VBox vbox;
     private boolean isDead = false;
 
@@ -23,18 +21,21 @@ public class AnimalTracker {
     {
         this.map = map;
         this.animal = animal;
-        this.genes = animal.getGenes();
         this.chart = chart;
-        this.startingChildren = (ArrayList<Animal>) animal.getChildren().clone();
-        this.numberOfChildren = animal.getChildren().size();
+        this.startingChildren = new ArrayList<>(animal.getChildren());
+
     }
 
-    public int countDescendants(ArrayList<Animal> children)
+    public int countDescendants(ArrayList<Animal> children, HashSet<Animal> checkForRepeat)
     {
         int tmp = 0;
         for (Animal animal : children)
         {
-            tmp += 1 + countDescendants(animal.getChildren());
+            if (!checkForRepeat.contains(animal))
+            {
+                checkForRepeat.add(animal);
+                tmp += 1 + countDescendants(animal.getChildren(), checkForRepeat);
+            }
         }
 
         return tmp;
@@ -46,10 +47,10 @@ public class AnimalTracker {
             this.vbox = new VBox();
             vbox.getChildren().add(new Text(""));
             vbox.getChildren().add(new Text("GENY: " + animal.getGenes()));
-            vbox.getChildren().add(new Text("ILOSC DZIECI: " + (animal.getChildren().size() - numberOfChildren)));
             ArrayList<Animal> toCount = animal.getChildren();
             toCount.removeAll(this.startingChildren);
-            vbox.getChildren().add(new Text("ILOSC POTOMKOW: " + countDescendants(toCount)));
+            vbox.getChildren().add(new Text("ILOSC DZIECI: " + toCount.size()));
+            vbox.getChildren().add(new Text("ILOSC POTOMKOW: " + countDescendants(toCount, new HashSet<>())));
 
             if (!map.getAnimalList().contains(animal) && epochOfDeath == -1) {
                 epochOfDeath = chart.getEpoch();
@@ -64,9 +65,5 @@ public class AnimalTracker {
     public VBox getVbox()
     {
         return vbox;
-    }
-
-    public EvolutionMap getMap() {
-        return map;
     }
 }

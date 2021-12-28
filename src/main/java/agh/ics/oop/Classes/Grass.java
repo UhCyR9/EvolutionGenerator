@@ -10,8 +10,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
 public class Grass implements IMapElement {
-    private Vector2d position;
-    private ImageView imageView;
+    private final Vector2d position;
+    private final ImageView imageView;
 
      public Grass(Vector2d position) {
          this.position = position;

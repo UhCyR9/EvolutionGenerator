@@ -9,7 +9,6 @@ import agh.ics.oop.EvolutionGenerator.SimulationEngine;
 import javafx.application.Application;
 
 import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
@@ -49,6 +48,7 @@ public class App extends Application {
     private SimulationEngine walledSimulation;
     private AnimalTracker wrappedChosenAnimalInfo;
     private AnimalTracker walledChosenAnimalInfo;
+    private final HashSet<Animal> eventHandlerAdded = new HashSet<>();
 
 
     @Override
@@ -194,38 +194,7 @@ public class App extends Application {
         this.wrappedChart = new Chart(wrappedMap);
         this.walledChart = new Chart(walledMap);
 
-        for (Animal animal : wrappedMap.getAnimalList())
-        {
-            ImageView imageView = animal.getImageView();
-            imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-                for (Animal animal2 : wrappedMap.getAnimalList())
-                {
-                    if (animal2.getImageView().equals(event.getTarget()))
-                    {
-                        this.wrappedChosenAnimalInfo = new AnimalTracker(wrappedMap, animal2, wrappedChart);
-                        break;
-                    }
-                }
-                event.consume();
-            });
-        }
 
-        for (Animal animal : walledMap.getAnimalList())
-        {
-            ImageView imageView = animal.getImageView();
-            imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-                for (Animal animal2 : walledMap.getAnimalList())
-                {
-                    if (animal2.getImageView().equals(event.getTarget()))
-                    {
-                        this.walledChosenAnimalInfo = new AnimalTracker(walledMap, animal2, walledChart);
-
-                        break;
-                    }
-                }
-                event.consume();
-            });
-        }
 
         HBox wrapper = new HBox(30,wrappedChart.getLineChart(), wrappedWrapper,walledChart.getLineChart(), walledWrapper);
         mainScene.setRoot(wrapper);
@@ -331,8 +300,8 @@ public class App extends Application {
             }
         }
 
-        HashMap<Vector2d,Grass> grassList = (HashMap<Vector2d, Grass>) evolutionMap.getGrass().clone();
-        HashMap<Vector2d,HashSet<Animal>> animals = (HashMap<Vector2d, HashSet<Animal>>) evolutionMap.getAnimals().clone();
+        HashMap<Vector2d,Grass> grassList = new HashMap<>(evolutionMap.getGrass());
+        HashMap<Vector2d,HashSet<Animal>> animals = new HashMap<>(evolutionMap.getAnimals());
         for (Vector2d grassPos : grassList.keySet())
         {
             grid.add(grassList.get(grassPos).getImageView(),grassPos.x,grassPos.y);
@@ -351,6 +320,42 @@ public class App extends Application {
 
     public void positionChanged(EvolutionMap map)
     {
+        Platform.runLater(() -> {
+            for (Animal animal : wrappedMap.getAnimalList())
+            {
+                if (!eventHandlerAdded.contains(animal)) {
+                    eventHandlerAdded.add(animal);
+                    ImageView imageView = animal.getImageView();
+                    imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                        for (Animal animal2 : wrappedMap.getAnimalList()) {
+                            if (animal2.getImageView().equals(event.getTarget())) {
+                                this.wrappedChosenAnimalInfo = new AnimalTracker(wrappedMap, animal2, wrappedChart);
+                                break;
+                            }
+                        }
+                        event.consume();
+                    });
+                }
+            }
+
+            for (Animal animal : walledMap.getAnimalList())
+            {
+                if (!eventHandlerAdded.contains(animal)) {
+                    eventHandlerAdded.add(animal);
+                    ImageView imageView = animal.getImageView();
+                    imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                        for (Animal animal2 : walledMap.getAnimalList()) {
+                            if (animal2.getImageView().equals(event.getTarget())) {
+                                this.walledChosenAnimalInfo = new AnimalTracker(walledMap, animal2, walledChart);
+                                break;
+                            }
+                        }
+                        event.consume();
+                    });
+                }
+            }
+        });
+
         if (map.equals(wrappedMap)) {
             Platform.runLater(() -> {
                 wrappedChart.updateChart();

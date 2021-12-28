@@ -4,7 +4,6 @@ import agh.ics.oop.EnumClasses.MapDirection;
 import agh.ics.oop.EvolutionGenerator.EntryData;
 import agh.ics.oop.Interfaces.IMapElement;
 import agh.ics.oop.Interfaces.IPositionChangeObserver;
-import javafx.event.EventHandler;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -25,10 +24,9 @@ public class Animal implements IMapElement {
     private final Genes genes;
     private int energy;
     private int age=0;
-    private ArrayList<Animal> children= new ArrayList<>();
-    private ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
-    private int toHashCode;
-    private ImageView imageView;
+    private final ArrayList<Animal> children= new ArrayList<>();
+    private final ArrayList<IPositionChangeObserver> observers = new ArrayList<>();
+    private final ImageView imageView;
     private static Image image;
 
 
@@ -47,7 +45,6 @@ public class Animal implements IMapElement {
         this.map = map;
         this.genes = new Genes();
         this.energy = EntryData.startEnergy;
-        toHashCode= numberOfAnimals;
         numberOfAnimals += 1;
 
         // losowy kierunek
@@ -67,7 +64,6 @@ public class Animal implements IMapElement {
         this.map = toCopy.getMap();
         this.genes = toCopy.getGenes2();
         this.energy = EntryData.startEnergy;
-        toHashCode= numberOfAnimals;
         numberOfAnimals += 1;
 
         // losowy kierunek
@@ -85,7 +81,6 @@ public class Animal implements IMapElement {
         this.position = parent1.getPosition();
         this.map = parent1.getMap();
         this.genes = new Genes(parent1,parent2);
-        this.toHashCode= numberOfAnimals;
         numberOfAnimals += 1;
 
         //energia dziecka
@@ -208,12 +203,6 @@ public class Animal implements IMapElement {
     public void addObserver(IPositionChangeObserver observer)
     {
         observers.add(observer);
-    }
-
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(toHashCode);
     }
 
     public ImageView getImageView() {

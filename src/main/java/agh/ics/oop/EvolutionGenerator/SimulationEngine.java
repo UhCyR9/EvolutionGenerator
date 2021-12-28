@@ -5,10 +5,10 @@ import agh.ics.oop.GUI.App;
 
 
 public class SimulationEngine implements Runnable {
-    private EvolutionMap map;
-    private boolean isMagic;
+    private final EvolutionMap map;
+    private final boolean isMagic;
     private int magicUsed = 0;
-    private App GUI;
+    private final App GUI;
     private boolean running = true;
     private boolean turnedOn = true;
 

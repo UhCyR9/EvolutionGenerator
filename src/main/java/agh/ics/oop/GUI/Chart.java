@@ -10,15 +10,15 @@ import java.util.ArrayList;
 
 public class Chart {
     private static final int MAX_SIZE = 10;
-    private EvolutionMap map;
-    private LineChart<String,Number> lineChart;
-    private XYChart.Series<String,Number> animalSeries;
-    private XYChart.Series<String,Number> grassSeries;
-    private XYChart.Series<String,Number> energySeries;
-    private XYChart.Series<String,Number> lifetimeSeries;
-    private XYChart.Series<String,Number> childrenSeries;
+    private final EvolutionMap map;
+    private final LineChart<String,Number> lineChart;
+    private final XYChart.Series<String,Number> animalSeries;
+    private final XYChart.Series<String,Number> grassSeries;
+    private final XYChart.Series<String,Number> energySeries;
+    private final XYChart.Series<String,Number> lifetimeSeries;
+    private final XYChart.Series<String,Number> childrenSeries;
     private int epoch = 0;
-    private ArrayList<String[]> historyData = new ArrayList<>();
+    private final ArrayList<String[]> historyData = new ArrayList<>();
 
     public Chart(EvolutionMap map)
     {

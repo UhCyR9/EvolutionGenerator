@@ -14,10 +14,10 @@ public class EvolutionMap implements IPositionChangeObserver {
     private final Vector2d jungleLowerLeft;
     private final Vector2d jungleUpperRight;
     private final boolean hasWall;
-    private HashMap<Vector2d, Grass> grass = new HashMap<>();
-    private HashMap<Vector2d, HashSet<Animal>> animals = new HashMap<>();
-    private HashSet<Animal> animalList = new HashSet<>();
-    private HashMap<Genes, Integer> genotype = new HashMap<>();
+    private final HashMap<Vector2d, Grass> grass = new HashMap<>();
+    private final HashMap<Vector2d, HashSet<Animal>> animals = new HashMap<>();
+    private final HashSet<Animal> animalList = new HashSet<>();
+    private final HashMap<Genes, Integer> genotype = new HashMap<>();
     private int averageLifeTime = 0;
 
 
@@ -295,7 +295,7 @@ public class EvolutionMap implements IPositionChangeObserver {
             tmp = new Vector2d(random.nextInt(width),random.nextInt(height));
         }
 
-        HashSet<Animal> tmpList = (HashSet<Animal>) animalList.clone();
+        HashSet<Animal> tmpList = new HashSet<>(animalList);
         for (Animal animal : tmpList)
         {
             new Animal(animal, tmp);
