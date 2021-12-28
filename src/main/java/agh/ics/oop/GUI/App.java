@@ -21,6 +21,9 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.scene.control.*;
@@ -28,6 +31,7 @@ import javafx.scene.control.*;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -124,7 +128,7 @@ public class App extends Application {
         grid.add(new Label("ILOSC ZWIERZAT: "),0,7);
         grid.add(startAnimalQuantityField,1,7);
 
-        grid.add(new Label("CZAS POMIEDZY DNIAMI: "),0,8);
+        grid.add(new Label("CZAS POMIEDZY DNIAMI [ms]: "),0,8);
         grid.add(breakTimeField,1,8);
 
         ChoiceBox<String> wrappedMapChoice = new ChoiceBox<>();
@@ -186,15 +190,50 @@ public class App extends Application {
         Text wrappedMagicCounter = new Text("ILOSC MAGII: 0");
         Text walledMagicCounter = new Text("ILOSC MAGII: 0");
 
-
-        wrappedWrapper = new VBox(10,wrappedGrid,wrappedDominant,wrappedStopButton,wrappedGenotype,wrappedSave, wrappedMagicCounter, new VBox());
-        walledWrapper = new VBox(10,walledGrid,walledDominant,walledStopButton,walledGenotype,walledSave, walledMagicCounter, new VBox());
+        Text wrapped = new Text("ZAWIJANA MAPA");
+        wrapped.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 25));
+        Text walled = new Text("MAPA Z MUREM");
+        walled.setFont(Font.font("verdana", FontWeight.BOLD, FontPosture.REGULAR, 25));
+        wrappedWrapper = new VBox(10,wrapped,wrappedGrid,wrappedDominant,wrappedStopButton,wrappedGenotype,wrappedSave, wrappedMagicCounter, new VBox());
+        walledWrapper = new VBox(10,walled,walledGrid,walledDominant,walledStopButton,walledGenotype,walledSave, walledMagicCounter, new VBox());
 
 
         this.wrappedChart = new Chart(wrappedMap);
         this.walledChart = new Chart(walledMap);
 
+        for (Animal animal : wrappedMap.getAnimalList())
+        {
+            if (!eventHandlerAdded.contains(animal)) {
+                eventHandlerAdded.add(animal);
+                ImageView imageView = animal.getImageView();
+                imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                    for (Animal animal2 : wrappedMap.getAnimalList()) {
+                        if (animal2.getImageView().equals(event.getTarget())) {
+                            this.wrappedChosenAnimalInfo = new AnimalTracker(wrappedMap, animal2, wrappedChart);
+                            break;
+                        }
+                    }
+                    event.consume();
+                });
+            }
+        }
 
+        for (Animal animal : walledMap.getAnimalList())
+        {
+            if (!eventHandlerAdded.contains(animal)) {
+                eventHandlerAdded.add(animal);
+                ImageView imageView = animal.getImageView();
+                imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                    for (Animal animal2 : walledMap.getAnimalList()) {
+                        if (animal2.getImageView().equals(event.getTarget())) {
+                            this.walledChosenAnimalInfo = new AnimalTracker(walledMap, animal2, walledChart);
+                            break;
+                        }
+                    }
+                    event.consume();
+                });
+            }
+        }
 
         HBox wrapper = new HBox(30,wrappedChart.getLineChart(), wrappedWrapper,walledChart.getLineChart(), walledWrapper);
         mainScene.setRoot(wrapper);
@@ -206,11 +245,11 @@ public class App extends Application {
             Text text;
             if (map == wrappedMap)
             {
-                text = (Text) wrappedWrapper.getChildren().get(5);
+                text = (Text) wrappedWrapper.getChildren().get(6);
             }
             else
             {
-                text = (Text) walledWrapper.getChildren().get(5);
+                text = (Text) walledWrapper.getChildren().get(6);
             }
             text.setText("ILOSC MAGII: " + count);
         });
@@ -219,9 +258,9 @@ public class App extends Application {
 
     private void setUpButtons(VBox box)
     {
-        Button stop = (Button) box.getChildren().get(2);
+        Button stop = (Button) box.getChildren().get(3);
         stop.setOnAction(event -> {
-            if (box.getChildren().get(0) == wrappedGrid)
+            if (box.getChildren().get(1) == wrappedGrid)
             {
                 wrappedSimulation.toggle();
             }
@@ -231,9 +270,9 @@ public class App extends Application {
             }
         });
 
-        Button save = (Button) box.getChildren().get(4);
+        Button save = (Button) box.getChildren().get(5);
         save.setOnAction(event -> {
-            if (box.getChildren().get(0) == wrappedGrid)
+            if (box.getChildren().get(1) == wrappedGrid)
             {
                 CSVCreator.writeDataLineByLine(wrappedChart.getHistoryData());
             }
@@ -243,9 +282,9 @@ public class App extends Application {
             }
         });
 
-        Button showDominant = (Button) box.getChildren().get(3);
+        Button showDominant = (Button) box.getChildren().get(4);
         showDominant.setOnAction(event -> {
-            if (box.getChildren().get(0) == wrappedGrid)
+            if (box.getChildren().get(1) == wrappedGrid)
             {
                 ColorAdjust changeColor = new ColorAdjust();
                 changeColor.setBrightness(0.8);
@@ -278,7 +317,7 @@ public class App extends Application {
         });
     }
 
-    private void drawObjects(EvolutionMap evolutionMap, GridPane grid)
+    private void drawObjects(EvolutionMap evolutionMap, GridPane grid) throws ConcurrentModificationException
     {
         grid.getChildren().clear();
 
@@ -359,14 +398,27 @@ public class App extends Application {
         if (map.equals(wrappedMap)) {
             Platform.runLater(() -> {
                 wrappedChart.updateChart();
-                drawObjects(wrappedMap, wrappedGrid);
+                try{
+                    drawObjects(wrappedMap, wrappedGrid);
+                }
+                catch (ConcurrentModificationException exception)
+                {
+                    System.out.println("ZBYT KROTKI CZAS POMIEDZY KOLEJNYMI DNIAMI");
+                }
                 wrappedDominant.setText(String.valueOf(wrappedMap.getDominant()));
             });
         }
         else {
             Platform.runLater(() -> {
                 walledChart.updateChart();
-                drawObjects(walledMap, walledGrid);
+                try{
+                    drawObjects(walledMap, walledGrid);
+                }
+                catch (ConcurrentModificationException exception)
+                {
+                    System.out.println("ZBYT KROTKI CZAS POMIEDZY KOLEJNYMI DNIAMI");
+                }
+
                 walledDominant.setText(String.valueOf(walledMap.getDominant()));
             });
         }
@@ -374,7 +426,7 @@ public class App extends Application {
         if (wrappedChosenAnimalInfo != null) {
             Platform.runLater(() -> {
                 wrappedChosenAnimalInfo.updateInformation();
-                    wrappedWrapper.getChildren().remove(6);
+                    wrappedWrapper.getChildren().remove(7);
                     wrappedWrapper.getChildren().add(wrappedChosenAnimalInfo.getVbox());
             });
         }
@@ -382,7 +434,7 @@ public class App extends Application {
         if (walledChosenAnimalInfo != null) {
             Platform.runLater(() -> {
                 walledChosenAnimalInfo.updateInformation();
-                walledWrapper.getChildren().remove(6);
+                walledWrapper.getChildren().remove(7);
                 walledWrapper.getChildren().add(walledChosenAnimalInfo.getVbox());
             });
         }

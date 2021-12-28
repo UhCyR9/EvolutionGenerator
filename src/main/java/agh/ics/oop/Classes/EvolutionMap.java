@@ -9,8 +9,6 @@ import java.util.*;
 public class EvolutionMap implements IPositionChangeObserver {
     private final int width;
     private final int height;
-    private final int jungleWidth;
-    private final int jungleHeight;
     private final Vector2d jungleLowerLeft;
     private final Vector2d jungleUpperRight;
     private final boolean hasWall;
@@ -29,10 +27,10 @@ public class EvolutionMap implements IPositionChangeObserver {
     {
         this.width = EntryData.width;
         this.height = EntryData.height;
-        this.jungleWidth = EntryData.jungleWidth;
-        this.jungleHeight = EntryData.jungleHeight;
-        this.jungleLowerLeft = new Vector2d((this.width/2)-(this.jungleWidth/2),(this.height/2)-(this.jungleHeight/2));
-        this.jungleUpperRight = new Vector2d((this.width/2)+(this.jungleWidth/2),(this.height/2)+(this.jungleHeight/2));
+        int jungleWidth = EntryData.jungleWidth;
+        int jungleHeight = EntryData.jungleHeight;
+        this.jungleLowerLeft = new Vector2d((this.width/2)-(jungleWidth /2),(this.height/2)-(jungleHeight /2));
+        this.jungleUpperRight = new Vector2d((this.width/2)+(jungleWidth /2)-1,(this.height/2)+(jungleHeight /2)-1);
         this.hasWall = hasWall;
 
         Random random = new Random();
@@ -207,7 +205,7 @@ public class EvolutionMap implements IPositionChangeObserver {
             {
                 System.out.println("trawa istnieje evolutionmap");
             }
-            grass.put(jungle.get(i), new Grass(jungle.get(i)));
+            grass.put(jungle.get(i), new Grass(jungle.get(i), this));
         }
 
         if (nonJungle.size() > 0)
@@ -217,10 +215,14 @@ public class EvolutionMap implements IPositionChangeObserver {
             {
                 System.out.println("trawa istnieje evolutionmap");
             }
-            grass.put(nonJungle.get(i), new Grass(nonJungle.get(i)));
+            grass.put(nonJungle.get(i), new Grass(nonJungle.get(i), this));
         }
     }
 
+    public boolean isJungle(Vector2d position)
+    {
+        return position.follows(jungleLowerLeft) && position.precedes(jungleUpperRight);
+    }
 
     public boolean canMoveTo(Vector2d position) {
         return !hasWall || position.precedes(new Vector2d(width - 1, height - 1)) && position.follows(new Vector2d(0, 0));
@@ -288,16 +290,15 @@ public class EvolutionMap implements IPositionChangeObserver {
 
     public void createMagicAnimals()
     {
-        Random random = new Random();
-        Vector2d tmp = new Vector2d(random.nextInt(width),random.nextInt(height));
-        while (animals.get(tmp).size() > 0)
-        {
-            tmp = new Vector2d(random.nextInt(width),random.nextInt(height));
-        }
-
         HashSet<Animal> tmpList = new HashSet<>(animalList);
         for (Animal animal : tmpList)
         {
+            Random random = new Random();
+            Vector2d tmp = new Vector2d(random.nextInt(width), random.nextInt(height));
+            while (animals.containsKey(tmp) && animals.get(tmp).size() > 0) {
+                tmp = new Vector2d(random.nextInt(width), random.nextInt(height));
+            }
+
             new Animal(animal, tmp);
         }
     }

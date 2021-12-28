@@ -39,7 +39,7 @@ public class SimulationEngine implements Runnable {
                 map.breedAnimals();
                 map.addGrass();
 
-                if (isMagic && map.numberOfAnimals() <= 5 && magicUsed < 3) {
+                if (isMagic && map.numberOfAnimals() <= 5 && map.numberOfAnimals() > 0  && magicUsed < 3) {
                     map.createMagicAnimals();
                     magicUsed += 1;
                     GUI.magicIndicator(map, magicUsed);

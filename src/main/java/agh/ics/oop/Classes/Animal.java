@@ -7,17 +7,14 @@ import agh.ics.oop.Interfaces.IPositionChangeObserver;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.Random;
 
 public class Animal implements IMapElement {
-    private static int numberOfAnimals = 0;
     private Vector2d position;
     private MapDirection direction;
     private final EvolutionMap map;
@@ -45,7 +42,6 @@ public class Animal implements IMapElement {
         this.map = map;
         this.genes = new Genes();
         this.energy = EntryData.startEnergy;
-        numberOfAnimals += 1;
 
         // losowy kierunek
         Random random = new Random();
@@ -64,7 +60,7 @@ public class Animal implements IMapElement {
         this.map = toCopy.getMap();
         this.genes = toCopy.getGenes2();
         this.energy = EntryData.startEnergy;
-        numberOfAnimals += 1;
+
 
         // losowy kierunek
         Random random = new Random();
@@ -81,7 +77,6 @@ public class Animal implements IMapElement {
         this.position = parent1.getPosition();
         this.map = parent1.getMap();
         this.genes = new Genes(parent1,parent2);
-        numberOfAnimals += 1;
 
         //energia dziecka
         int par1Energy = (int) Math.round(parent1.getEnergy()*(0.25));
@@ -98,17 +93,7 @@ public class Animal implements IMapElement {
         imageView = new ImageView(image);
         imageView.setFitWidth(Math.round((double)(450/EntryData.width)));
         imageView.setFitHeight(Math.round((double)(450/EntryData.width)));
-        imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-            for (Animal animal : map.getAnimalList())
-            {
-                if (animal.getImageView().equals(event.getTarget()))
-                {
 
-                    break;
-                }
-            }
-            event.consume();
-        });
     }
 
 
@@ -209,18 +194,18 @@ public class Animal implements IMapElement {
         ColorAdjust changeColor = new ColorAdjust();
         changeColor.setBrightness(0);
 
-        this.imageView.setEffect(changeColor);
-
-        if (this.energy < EntryData.startEnergy/2)
-        {
-            changeColor.setBrightness(-0.5);
+        if (this.imageView != null) {
             this.imageView.setEffect(changeColor);
-        }
 
-        if (this.energy < EntryData.startEnergy/4)
-        {
-            changeColor.setBrightness(-0.8);
-            this.imageView.setEffect(changeColor);
+            if (this.energy < EntryData.startEnergy / 2) {
+                changeColor.setBrightness(-0.5);
+                this.imageView.setEffect(changeColor);
+            }
+
+            if (this.energy < EntryData.startEnergy / 4) {
+                changeColor.setBrightness(-0.8);
+                this.imageView.setEffect(changeColor);
+            }
         }
 
         return imageView;

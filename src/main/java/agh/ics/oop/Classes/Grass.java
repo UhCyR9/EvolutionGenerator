@@ -12,21 +12,44 @@ import java.io.FileNotFoundException;
 public class Grass implements IMapElement {
     private final Vector2d position;
     private final ImageView imageView;
+    private final EvolutionMap map;
+    private static Image grass;
+    private static Image jungleGrass;
 
-     public Grass(Vector2d position) {
-         this.position = position;
-
-        Image image = null;
+    static {
+        grass = null;
         try {
-            image = new Image(new FileInputStream("src/main/resources/grass.jpg"));
+            grass = new Image(new FileInputStream("src/main/resources/grass.jpg"));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 
-        imageView = new ImageView(image);
-        imageView.setFitWidth(Math.round((double)(450/EntryData.width)));
-        imageView.setFitHeight(Math.round((double)(450/EntryData.width)));
+        jungleGrass = null;
+        try {
+            jungleGrass = new Image(new FileInputStream("src/main/resources/jungleGrass.jpg"));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
+
+
+     public Grass(Vector2d position, EvolutionMap map) {
+         this.position = position;
+         this.map = map;
+
+
+         if (map.isJungle(position))
+         {
+             imageView = new ImageView(jungleGrass);
+         }
+         else
+         {
+             imageView = new ImageView(grass);
+         }
+         imageView.setFitWidth(Math.round((double)(450/EntryData.width)));
+         imageView.setFitHeight(Math.round((double)(450/EntryData.width)));
+
+     }
 
 
 
